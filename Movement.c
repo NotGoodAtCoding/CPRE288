@@ -99,8 +99,7 @@ int detectCollision(oi_t * sensor_data){
 	
 	if ( left_hit || right_hit ) {
 		print("Collision!");
-		//move(-100, -100, 150, sensor_data);
-		turn(105, sensor_data);
+		move(-100, -100, 150, sensor_data);
 		return 1;
 	} else {
 		return 0;

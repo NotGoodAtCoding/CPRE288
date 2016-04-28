@@ -72,7 +72,6 @@ int rapidForwardScan(){
 			//TODO: To 15
 			if ( pingAvg < 25 || irAvg < 25 ) {
 				print("Collision detected");
-				return angle;
 			}
 			
 			angle +=2;
@@ -96,23 +95,19 @@ int detectColoredBoundry(oi_t * sensor_data){
 	if ( left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY || front_left_reading == WHITE_BOUNDRY || right_reading == WHITE_BOUNDRY ) {
 		if ( left_reading == WHITE_BOUNDRY ) {
 			print("Left  Boundary detected");
-			turn(-80, sensor_data);
 		} else if ( front_left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY ) {
 			print("Forward boundary detected");
-			turn(100, sensor_data);
 		} else {
 			print("Right boundary detected");
-			turn(80, sensor_data);
 		}
 		
-		//move(-100, -100, 50, sensor_data);
-		//turn(105, sensor_data);
+		move(-100, -100, 50, sensor_data);
 		return WHITE_BOUNDRY;
 	}
 	
 	if ( left_reading == FINISH_BOUNDRY || front_right_reading == FINISH_BOUNDRY || front_left_reading == FINISH_BOUNDRY || right_reading == FINISH_BOUNDRY ) {
 		print("Finish Detected.");
-		//winProcedure(sensor_data);
+		winProcedure(sensor_data);
 		return FINISH_BOUNDRY;
 	}
 	
@@ -147,7 +142,6 @@ int detectCrater(oi_t * sensor_data){
 		}
 		
 		move(-100,-100,100,sensor_data);
-		turn(105, sensor_data);
 		return 1;
 	}
 
@@ -166,7 +160,6 @@ void moveCautiously(int cm, oi_t * sensorData){
 			scanSprint = 0;
 			detectedAngle = rapidForwardScan();
 			if ( detectedAngle ) {
-				turn(detectedAngle, sensorData);
 				break;
 			}
 		}
@@ -293,15 +286,15 @@ void print(char* s){
 int main(void)
 {
 	oi_t * sensor_data = init();
-	/*
+	
 	map_t map;
 	init_map(&map);
 	
 	int command = -1, quantity = -1;
-	*/
+	
 	
 	while (1) {
-		/*
+		
 		print("Scanning...");
 		slowFullScan(&map);
 		
@@ -313,15 +306,12 @@ int main(void)
 		
 		print("Executing Command...");
 		executeCommand(command, quantity, sensor_data);
-		*/
-		
-		moveCautiously(450, sensor_data);
 		
 		oi_update(sensor_data);
 	}
 	
 	oi_free(sensor_data);
-	//free(&map);
+	free(&map);
 	
 	return 0;
 }
