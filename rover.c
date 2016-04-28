@@ -177,6 +177,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 			detectedAngle = rapidForwardScan();
 			if ( detectedAngle ) {
 				int correctedAngle = (90-detectedAngle);
+				
 				turn(correctedAngle, sensorData);
 				break;
 			}

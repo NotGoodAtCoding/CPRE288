@@ -78,8 +78,9 @@ void move(int right, int left, int distance, oi_t *sensor_data){
 // Turn turnDegree
 void turn(int turnDegrees, oi_t * sensor_data){
 	int currentDegrees = 0;
+	int magnitude = turnDegrees > 0 ? 1 : -1;
 	
-	oi_set_wheels((turnDegrees / 3) * 2,(-1 * turnDegrees / 3) * 2);
+	oi_set_wheels(magnitude * 100, -1 * magnitude * 100);
 	
 	turnDegrees = abs(turnDegrees);
 
