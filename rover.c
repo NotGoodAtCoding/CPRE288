@@ -72,6 +72,7 @@ int rapidForwardScan(){
 			//TODO: To 15
 			if ( pingAvg < 25 || irAvg < 25 ) {
 				print("Collision detected");
+				return angle;
 			}
 			
 			angle +=2;
