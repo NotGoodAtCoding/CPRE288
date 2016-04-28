@@ -18,9 +18,9 @@
 #include <avr/io.h>
 
 // Move with right, left wheel speed for distance - TODO: Distance is in CM?
-void move(int right, int left, int distance, oi_t *sensor_data){
+int move(int right, int left, int distance, oi_t *sensor_data){
 	int sum = 0;
-	oi_set_wheels(right, left); // move forward; full speed
+	oi_set_wheels(right - 8, left); // move forward; full speed
 	
 	distance = abs(distance);
 	
@@ -30,7 +30,7 @@ void move(int right, int left, int distance, oi_t *sensor_data){
 		if ( right > 0 && left > 0 ) {
 			// Only reset the wheels if we stopped
 			if ( detectCollision(sensor_data) ) {
-				oi_set_wheels(right, left);
+				return 1;
 			}
 		}
 
@@ -38,6 +38,8 @@ void move(int right, int left, int distance, oi_t *sensor_data){
 	}
 	
 	oi_set_wheels(0,0);
+	
+	return 0;
 }
 
 // Turn turnDegree
@@ -65,8 +67,8 @@ int detectCollision(oi_t * sensor_data){
 	
 	if ( left_hit || right_hit ) {
 		print("Collision!");
-		//move(-100, -100, 150, sensor_data);
-		turn(105, sensor_data);
+		move(-100, -100, 50, sensor_data);
+		turn(60, sensor_data);
 		return 1;
 	} else {
 		return 0;

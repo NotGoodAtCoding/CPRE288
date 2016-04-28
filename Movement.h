@@ -14,7 +14,7 @@
 
 
 // Move with right, left wheel speed for distance
-void move(int right, int left, int distance, oi_t *sensor_data);
+int move(int right, int left, int distance, oi_t *sensor_data);
 
 // Turn turnDegree
 void turn(int turnDegrees, oi_t * sensor_data);

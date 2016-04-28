@@ -54,12 +54,12 @@ int slowFullScan(){
 // Do a short / RAPID forward scan from approx 45 - 135 to prevent collisions
 //CHANGED: Lessened sweep angle, lessened detect distance to 15 cm
 int rapidForwardScan(){
-		float angle = 45;
+		float angle = 35;
 		float pingAvg = 100;
 		float irAvg = 100;
 		
 		//Do a 180 degree sweep
-		while(angle <= 135)
+		while(angle <= 145)
 		{
 			move_servo(angle);
 			
@@ -100,13 +100,13 @@ int detectColoredBoundry(oi_t * sensor_data){
 		
 		if ( left_reading == WHITE_BOUNDRY ) {
 			print("Left boundary detected");
-			turn(-80, sensor_data);
+			turn(-65, sensor_data);
 		} else if ( front_left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY ) {
 			print("Forward boundary detected");
 			turn(100, sensor_data);
 		} else {
 			print("Right boundary detected");
-			turn(80, sensor_data);
+			turn(65, sensor_data);
 		}
 		
 		return WHITE_BOUNDRY;
@@ -141,16 +141,19 @@ int detectCrater(oi_t * sensor_data){
 	
 	// Naive cliff detection
 	if ( !left_cliff || !right_cliff || !front_right_cliff || !front_left_cliff ) {
+		move(-100,-100, 50, sensor_data);
+		
 		if ( !left_cliff ) {
 			print("Left Cliff detected");
+			turn(-65, sensor_data);
 		} else if ( !front_left_cliff || !front_right_cliff ) {
 			print("Front Cliff Detected");
+			turn(90, sensor_data);
 		} else {
 			print("Right Cliff Detected");
+			turn(65, sensor_data);
 		}
 		
-		move(-100,-100,100,sensor_data);
-		turn(105, sensor_data);
 		return 1;
 	}
 
@@ -165,13 +168,13 @@ void moveCautiously(int cm, oi_t * sensorData){
 	while ( currentDistanceTravelled < cm) {
 		
 		//Full scan every 30CM (one square)
-		if( slowScanSprint > 300 ){
+		/*if( slowScanSprint > 300 ){
 			detectedAngle = slowFullScan();
 			if(detectedAngle){
 				//turn(detectedAngle, sensorData);
 				detectedAngle =0;
 			}
-		}
+		} */
 		
 		// Scan every 10CM, prevent collisions
 		if ( fastScanSprint > 100 || fastScanSprint == -1) {
@@ -182,6 +185,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 				sign = (detectedAngle < 90) ? 1 : -1;
 				int correctedAngle = (60-abs(90-detectedAngle)) * sign;
 				turn(correctedAngle, sensorData);
+				break;
 			}
 		}
 		
@@ -194,8 +198,8 @@ void moveCautiously(int cm, oi_t * sensorData){
 			}
 		}
 		
-		// Scan ever 1CM, prevent falling in craters
-		if ( craterSprint > 10 || craterSprint == -1) {
+		// Scan ever 2CM, prevent falling in craters
+		if ( craterSprint > 20 || craterSprint == -1) {
 			craterSprint = 0;
 			
 			if ( detectCrater(sensorData) ) {
@@ -204,7 +208,9 @@ void moveCautiously(int cm, oi_t * sensorData){
 		}
 		
 		//Move 1CM
-		move(120,120,10,sensorData);
+		if ( move(120,120,10,sensorData) ) {
+			break;
+		}
 		
 		//Update scan sprint distances
 		currentDistanceTravelled+=10;
