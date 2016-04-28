@@ -38,6 +38,8 @@
 #define NO_BOUNDRY 0
 #define WHITE_BOUNDRY 1
 #define FINISH_BOUNDRY 2
+#define WHITE_BOUNDARY_LOWER 700
+#define WHITE_BOUNDARY_UPPER 950
 
 oi_t * init();
 //void slowFullScan(map_t *m);

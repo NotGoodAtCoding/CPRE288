@@ -81,7 +81,7 @@ int rapidForwardScan(){
 		return 0;
 }
 
-int left_base = 200, front_left_base = 200, front_right_base = 200, right_base = 200;
+int left_base = 0, front_left_base = 0, front_right_base = 0, right_base = 0;
 
 // Detect tape boundry with light sensor
 int detectColoredBoundry(oi_t * sensor_data){
@@ -94,7 +94,6 @@ int detectColoredBoundry(oi_t * sensor_data){
 	int front_left_reading = determineBoundryType(front_left_sensor, front_left_base);
 	int front_right_reading = determineBoundryType(front_right_sensor, front_right_base);
 	int right_reading = determineBoundryType(right_sensor, right_base);
-	
 	
 	if ( left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY || front_left_reading == WHITE_BOUNDRY || right_reading == WHITE_BOUNDRY ) {
 		move(-100, -100, 50, sensor_data);
@@ -115,7 +114,7 @@ int detectColoredBoundry(oi_t * sensor_data){
 	
 	if ( left_reading == FINISH_BOUNDRY || front_right_reading == FINISH_BOUNDRY || front_left_reading == FINISH_BOUNDRY || right_reading == FINISH_BOUNDRY ) {
 		print("Finish Detected.");
-		//winProcedure(sensor_data);
+		winProcedure(sensor_data);
 		return FINISH_BOUNDRY;
 	} 
 	
@@ -123,9 +122,10 @@ int detectColoredBoundry(oi_t * sensor_data){
 }
 
 int determineBoundryType(int reading, int base){
+	
 	if ( reading < base * 2 ) {
 		return NO_BOUNDRY;
-	} else if ( reading >= base * 2 && reading < ((base * 35) / 10) ) {
+	} else if ( reading >= base * 2 && reading <  ((base * 35) / 10) ) {
 		return WHITE_BOUNDRY;
 	} else {
 		return FINISH_BOUNDRY;
@@ -185,8 +185,8 @@ void moveCautiously(int cm, oi_t * sensorData){
 			}
 		}
 		
-		// Scan every 2.5CM, prevent driving over boundaries
-		if ( boundrySprint > 25 || boundrySprint == -1) {
+		// Scan every 1CM, prevent driving over boundaries
+		if ( boundrySprint > 10 || boundrySprint == -1) {
 			boundrySprint = 0;
 			
 			if ( detectColoredBoundry(sensorData) ) {
@@ -222,6 +222,22 @@ void winProcedure(oi_t * sensorData){
 	oi_play_song(MARIO_UNDERWORLD);
 	
 	turn(1000, sensorData);
+}
+
+void setBaseLightSensors(oi_t * sensor_data){
+	left_base = sensor_data->cliff_left_signal;
+	front_left_base = sensor_data->cliff_frontleft_signal;
+	front_right_base = sensor_data->cliff_frontright_signal;
+	right_base = sensor_data->cliff_right_signal; 
+	
+	while ( !left_base || !front_left_base || !front_right_base || !right_base ) {
+		oi_update(sensor_data);
+		
+		left_base = sensor_data->cliff_left_signal;
+		front_left_base = sensor_data->cliff_frontleft_signal;
+		front_right_base = sensor_data->cliff_frontright_signal;
+		right_base = sensor_data->cliff_right_signal;
+	}
 }
 
 int receiveCommand(){
@@ -307,16 +323,9 @@ void print(char* s){
 int main(void)
 {
 	oi_t * sensor_data = init();
-	oi_update(sensor_data);
 	
-	//Base reading for boundry detection
-/*	left_base = sensor_data->cliff_left;
-	front_left_base = sensor_data->cliff_frontleft;
-	front_right_base = sensor_data->cliff_frontright;
-	right_base = sensor_data->cliff_right; 
-	
-	lprintf("%d %d %d %d", left_base, front_left_base, front_right_base, right_base); */
-	
+	setBaseLightSensors(sensor_data);
+
 	/*
 	map_t map;
 	init_map(&map);
