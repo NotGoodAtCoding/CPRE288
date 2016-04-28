@@ -166,7 +166,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 		if( slowScanSprint > 300 ){
 			detectedAngle = slowFullScan();
 			if(detectedAngle){
-				turn(detectedAngle, sensorData);
+				//turn(detectedAngle, sensorData);
 				detectedAngle =0;
 			}
 		}
@@ -177,7 +177,9 @@ void moveCautiously(int cm, oi_t * sensorData){
 			detectedAngle = rapidForwardScan();
 			if ( detectedAngle ) {
 				int correctedAngle = (90-detectedAngle);
-				
+				char buf[10];
+				sprintf(buf, "%d", correctedAngle);
+				print(buf);
 				turn(correctedAngle, sensorData);
 				break;
 			}
@@ -202,7 +204,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 		}
 		
 		//Move 1CM
-		move(120,120,10,sensorData);
+		//move(120,120,10,sensorData);
 		
 		//Update scan sprint distances
 		currentDistanceTravelled+=10;
@@ -328,7 +330,6 @@ int main(void)
 		*/
 		
 		moveCautiously(450, sensor_data);
-		slowFullScan();
 		
 		oi_update(sensor_data);
 	}
