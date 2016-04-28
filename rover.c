@@ -151,12 +151,12 @@ int detectCrater(oi_t * sensor_data){
 void moveCautiously(int cm, oi_t * sensorData){
 	int currentDistanceTravelled = 0;
 	int detectedAngle = 0;
-	int scanSprint = 0, boundrySprint = 0, craterSprint = 0;
+	int scanSprint = -1, boundarySprint = -1, craterSprint = -1;
 	
 	while ( currentDistanceTravelled < cm) {
 		
 		// Scan every 10CM, prevent collisions
-		if ( scanSprint > 100 ) {
+		if ( scanSprint > 100 || scanSprint == -1 ) {
 			scanSprint = 0;
 			detectedAngle = rapidForwardScan();
 			if ( detectedAngle ) {
@@ -165,8 +165,8 @@ void moveCautiously(int cm, oi_t * sensorData){
 		}
 		
 		// Scan every 2.5CM, prevent driving over boundaries
-		if ( boundrySprint > 25 ) {
-			boundrySprint = 0;
+		if ( boundarySprint > 25 || boundarySprint == -1 ) {
+			boundarySprint = 0;
 			
 			if ( detectColoredBoundry(sensorData) ) {
 				break;
@@ -174,7 +174,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 		}
 		
 		// Scan ever 1CM, prevent falling in craters
-		if ( craterSprint > 10 ) {
+		if ( craterSprint > 10 || craterSprint == -1) {
 			craterSprint = 0;
 			
 			if ( detectCrater(sensorData) ) {
@@ -188,7 +188,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 		//Update scan sprint distances
 		currentDistanceTravelled+=10;
 		scanSprint+=10;
-		boundrySprint+=10;
+		boundarySprint+=10;
 		craterSprint+=10;
 	}
 }
