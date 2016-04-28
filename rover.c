@@ -47,7 +47,6 @@ int slowFullScan(){
 		//place_point(m, P,  ping_read(), angle);
 		
 		angle +=2;
-		wait_ms(30);
 	}
 	return ir_detect;
 }
@@ -82,6 +81,8 @@ int rapidForwardScan(){
 		return 0;
 }
 
+int left_base = 200, front_left_base = 200, front_right_base = 200, right_base = 200;
+
 // Detect tape boundry with light sensor
 int detectColoredBoundry(oi_t * sensor_data){
 	int left_sensor = sensor_data->cliff_left_signal;
@@ -89,14 +90,17 @@ int detectColoredBoundry(oi_t * sensor_data){
 	int front_right_sensor = sensor_data->cliff_frontright_signal;
 	int right_sensor = sensor_data->cliff_right_signal;
 	
-	int left_reading = determineBoundryType(left_sensor);
-	int front_left_reading = determineBoundryType(front_left_sensor);
-	int front_right_reading = determineBoundryType(front_right_sensor);
-	int right_reading = determineBoundryType(right_sensor);
+	int left_reading = determineBoundryType(left_sensor, left_base);
+	int front_left_reading = determineBoundryType(front_left_sensor, front_left_base);
+	int front_right_reading = determineBoundryType(front_right_sensor, front_right_base);
+	int right_reading = determineBoundryType(right_sensor, right_base);
+	
 	
 	if ( left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY || front_left_reading == WHITE_BOUNDRY || right_reading == WHITE_BOUNDRY ) {
+		move(-100, -100, 50, sensor_data);
+		
 		if ( left_reading == WHITE_BOUNDRY ) {
-			print("Left  Boundary detected");
+			print("Left boundary detected");
 			turn(-80, sensor_data);
 		} else if ( front_left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY ) {
 			print("Forward boundary detected");
@@ -106,8 +110,6 @@ int detectColoredBoundry(oi_t * sensor_data){
 			turn(80, sensor_data);
 		}
 		
-		//move(-100, -100, 50, sensor_data);
-		//turn(105, sensor_data);
 		return WHITE_BOUNDRY;
 	}
 	
@@ -115,15 +117,15 @@ int detectColoredBoundry(oi_t * sensor_data){
 		print("Finish Detected.");
 		//winProcedure(sensor_data);
 		return FINISH_BOUNDRY;
-	}
+	} 
 	
 	return NO_BOUNDRY;
 }
 
-int determineBoundryType(int reading){
-	if ( reading < WHITE_BOUNDRY_LOWER ) {
+int determineBoundryType(int reading, int base){
+	if ( reading < base * 2 ) {
 		return NO_BOUNDRY;
-	} else if ( reading >= WHITE_BOUNDRY_LOWER && reading < WHITE_BOUNDRY_UPPER ) {
+	} else if ( reading >= base * 2 && reading < ((base * 35) / 10) ) {
 		return WHITE_BOUNDRY;
 	} else {
 		return FINISH_BOUNDRY;
@@ -176,12 +178,10 @@ void moveCautiously(int cm, oi_t * sensorData){
 			fastScanSprint = 0;
 			detectedAngle = rapidForwardScan();
 			if ( detectedAngle ) {
-				int correctedAngle = (90-detectedAngle);
-				char buf[10];
-				sprintf(buf, "%d", correctedAngle);
-				print(buf);
+				int sign;
+				sign = (detectedAngle < 90) ? 1 : -1;
+				int correctedAngle = (60-abs(90-detectedAngle)) * sign;
 				turn(correctedAngle, sensorData);
-				break;
 			}
 		}
 		
@@ -204,7 +204,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 		}
 		
 		//Move 1CM
-		//move(120,120,10,sensorData);
+		move(120,120,10,sensorData);
 		
 		//Update scan sprint distances
 		currentDistanceTravelled+=10;
@@ -307,6 +307,16 @@ void print(char* s){
 int main(void)
 {
 	oi_t * sensor_data = init();
+	oi_update(sensor_data);
+	
+	//Base reading for boundry detection
+/*	left_base = sensor_data->cliff_left;
+	front_left_base = sensor_data->cliff_frontleft;
+	front_right_base = sensor_data->cliff_frontright;
+	right_base = sensor_data->cliff_right; 
+	
+	lprintf("%d %d %d %d", left_base, front_left_base, front_right_base, right_base); */
+	
 	/*
 	map_t map;
 	init_map(&map);
@@ -328,6 +338,8 @@ int main(void)
 		print("Executing Command...");
 		executeCommand(command, quantity, sensor_data);
 		*/
+		
+		//detectColoredBoundry(sensor_data);
 		
 		moveCautiously(450, sensor_data);
 		

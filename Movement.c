@@ -10,47 +10,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#ifndef OPEN_H
-#define OPEN_H
-
 #include "open_interface.h"
-
-#endif /* OPEN_H */
-
-#ifndef STDIO
-#define STDIO
-
 #include <stdio.h>
-
-#endif /* STDIO */
-
-#ifndef MATH_H
-#define MATH_H
-
 #include <math.h>
-
-#endif /* MATH_H */
-
-#ifndef LCD_H
-#define LCD_H
-
 #include "lcd.h"
-
-#endif /* LCD_H */
-
-#ifndef UTIL_H
-#define UTIL_H
-
 #include "util.h"
-
-#endif /* UTIL_H */
-
-#ifndef AVR_IO
-#define AVR_IO
-
 #include <avr/io.h>
-
-#endif /* AVR_IO */
 
 // Move with right, left wheel speed for distance - TODO: Distance is in CM?
 void move(int right, int left, int distance, oi_t *sensor_data){
