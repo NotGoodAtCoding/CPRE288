@@ -7,6 +7,7 @@
 
 // System libraries and components
 #include "rover.h"
+#include "map.h"
 
 // Initialize all necessary components
 oi_t * init(){
@@ -24,31 +25,31 @@ oi_t * init(){
 }
 
 // Full 180 degree scan to populate and display map
-void slowFullScan(map_t *m){
+int slowFullScan(){
 	print("Scanning...");
-	int angle = 0;
+	int angle = 0, ir_detect = 0;
 	
 	//Do a 180 degree sweep, populate amp
 	while(angle <= 180)
 	{
 		move_servo(angle);
 
-		place_point(m, IR, ADC_read(),  angle);
-		place_point(m, P,  ping_read(), angle);
+		if(abs(ADC_read() * cos(deg_to_rad(angle))) <= 15){
+			print("IR Imminent Collision detected");
+			ir_detect = angle;
+		}
+		
+		if(abs(ping_read() * cos(deg_to_rad(angle))) <= 15){
+			print("PING Imminent Collision detected");
+		}
+		
+		//place_point(m, IR, ADC_read(),  angle);
+		//place_point(m, P,  ping_read(), angle);
 		
 		angle +=2;
-		wait_ms(75);
+		wait_ms(30);
 	}
-	
-	//Display Map
-	int i, j;
-	for(i=0; i < MAP_Y; i++){
-		for(j=0; j < MAP_X; j++){
-			serial_putc(m->map[i][j]);
-		}
-	}
-
-	init_map(m);
+	return ir_detect;
 }
 
 // Do a short / RAPID forward scan from approx 45 - 135 to prevent collisions
@@ -157,22 +158,32 @@ int detectCrater(oi_t * sensor_data){
 void moveCautiously(int cm, oi_t * sensorData){
 	int currentDistanceTravelled = 0;
 	int detectedAngle = 0;
-	int scanSprint = 0, boundrySprint = 0, craterSprint = 0;
+	int slowScanSprint = -1, fastScanSprint = -1, boundrySprint = -1, craterSprint = -1;
 	
 	while ( currentDistanceTravelled < cm) {
 		
+		//Full scan every 30CM (one square)
+		if( slowScanSprint > 300 ){
+			detectedAngle = slowFullScan();
+			if(detectedAngle){
+				turn(detectedAngle, sensorData);
+				detectedAngle =0;
+			}
+		}
+		
 		// Scan every 10CM, prevent collisions
-		if ( scanSprint > 100 ) {
-			scanSprint = 0;
+		if ( fastScanSprint > 100 || fastScanSprint == -1) {
+			fastScanSprint = 0;
 			detectedAngle = rapidForwardScan();
 			if ( detectedAngle ) {
-				turn(detectedAngle, sensorData);
+				int correctedAngle = (90-detectedAngle);
+				turn(correctedAngle, sensorData);
 				break;
 			}
 		}
 		
 		// Scan every 2.5CM, prevent driving over boundaries
-		if ( boundrySprint > 25 ) {
+		if ( boundrySprint > 25 || boundrySprint == -1) {
 			boundrySprint = 0;
 			
 			if ( detectColoredBoundry(sensorData) ) {
@@ -181,7 +192,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 		}
 		
 		// Scan ever 1CM, prevent falling in craters
-		if ( craterSprint > 10 ) {
+		if ( craterSprint > 10 || craterSprint == -1) {
 			craterSprint = 0;
 			
 			if ( detectCrater(sensorData) ) {
@@ -194,7 +205,7 @@ void moveCautiously(int cm, oi_t * sensorData){
 		
 		//Update scan sprint distances
 		currentDistanceTravelled+=10;
-		scanSprint+=10;
+		fastScanSprint+=10;
 		boundrySprint+=10;
 		craterSprint+=10;
 	}
@@ -316,6 +327,7 @@ int main(void)
 		*/
 		
 		moveCautiously(450, sensor_data);
+		slowFullScan();
 		
 		oi_update(sensor_data);
 	}

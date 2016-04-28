@@ -43,7 +43,7 @@
 
 oi_t * init();
 //void slowFullScan(map_t *m);
-void slowFullScan();
+int slowFullScan();
 int rapidForwardScan();
 int detectColoredBoundry(oi_t * sensor_data);
 int determineBoundryType(int reading);
