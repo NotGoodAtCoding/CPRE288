@@ -24,42 +24,15 @@ oi_t * init(){
 	return sensor_data;	
 }
 
-// Full 180 degree scan to populate and display map
-int slowFullScan(){
-	print("Scanning...");
-	int angle = 0, ir_detect = 0;
-	
-	//Do a 180 degree sweep, populate amp
-	while(angle <= 180)
-	{
-		move_servo(angle);
-
-		if(abs(ADC_read() * cos(deg_to_rad(angle))) <= 15){
-			print("IR Imminent Collision detected");
-			ir_detect = angle;
-		}
-		
-		if(abs(ping_read() * cos(deg_to_rad(angle))) <= 15){
-			print("PING Imminent Collision detected");
-		}
-		
-		//place_point(m, IR, ADC_read(),  angle);
-		//place_point(m, P,  ping_read(), angle);
-		
-		angle +=2;
-	}
-	return ir_detect;
-}
-
 // Do a short / RAPID forward scan from approx 45 - 135 to prevent collisions
 //CHANGED: Lessened sweep angle, lessened detect distance to 15 cm
 int rapidForwardScan(){
-		float angle = 35;
+		float angle = 40;
 		float pingAvg = 100;
 		float irAvg = 100;
 		
 		//Do a 180 degree sweep
-		while(angle <= 145)
+		while(angle <= 140)
 		{
 			move_servo(angle);
 			
@@ -83,7 +56,7 @@ int rapidForwardScan(){
 
 int left_base = 0, front_left_base = 0, front_right_base = 0, right_base = 0;
 
-// Detect tape boundry with light sensor
+// Detect tape boundary with light sensor
 int detectColoredBoundry(oi_t * sensor_data){
 	int left_sensor = sensor_data->cliff_left_signal;
 	int front_left_sensor = sensor_data->cliff_frontleft_signal;
@@ -94,19 +67,21 @@ int detectColoredBoundry(oi_t * sensor_data){
 	int front_left_reading = determineBoundryType(front_left_sensor, front_left_base);
 	int front_right_reading = determineBoundryType(front_right_sensor, front_right_base);
 	int right_reading = determineBoundryType(right_sensor, right_base);
-	
+
+	//lprintf("%d %d %d", left_base, left_sensor, left_base * 4);
+
 	if ( left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY || front_left_reading == WHITE_BOUNDRY || right_reading == WHITE_BOUNDRY ) {
 		move(-100, -100, 50, sensor_data);
 		
 		if ( left_reading == WHITE_BOUNDRY ) {
 			print("Left boundary detected");
-			turn(-65, sensor_data);
+			turn(-50, sensor_data);
 		} else if ( front_left_reading == WHITE_BOUNDRY || front_right_reading == WHITE_BOUNDRY ) {
 			print("Forward boundary detected");
 			turn(100, sensor_data);
 		} else {
 			print("Right boundary detected");
-			turn(65, sensor_data);
+			turn(50, sensor_data);
 		}
 		
 		return WHITE_BOUNDRY;
@@ -116,19 +91,31 @@ int detectColoredBoundry(oi_t * sensor_data){
 		print("Finish Detected.");
 		winProcedure(sensor_data);
 		return FINISH_BOUNDRY;
-	} 
+	}
 	
 	return NO_BOUNDRY;
 }
 
+//Sketchy red/yellow
+/*
 int determineBoundryType(int reading, int base){
-	
 	if ( reading < base * 2 ) {
 		return NO_BOUNDRY;
-	} else if ( reading >= base * 2 && reading <  ((base * 35) / 10) ) {
+	} else if ( reading >= base * 2 && reading <  (base * 3) + (base / 2) ) {
 		return WHITE_BOUNDRY;
 	} else {
 		return FINISH_BOUNDRY;
+	}
+} */
+
+// For black circles
+int determineBoundryType(int reading, int base){
+	if ( reading < 100 && reading > 0 ) {
+		return FINISH_BOUNDRY;
+	} else if ( reading > 100 && reading < (base * 2) ) {
+		return NO_BOUNDRY;
+	} else {
+		return WHITE_BOUNDRY;
 	}
 }
 
@@ -145,13 +132,13 @@ int detectCrater(oi_t * sensor_data){
 		
 		if ( !left_cliff ) {
 			print("Left Cliff detected");
-			turn(-65, sensor_data);
+			turn(-50, sensor_data);
 		} else if ( !front_left_cliff || !front_right_cliff ) {
 			print("Front Cliff Detected");
 			turn(90, sensor_data);
 		} else {
 			print("Right Cliff Detected");
-			turn(65, sensor_data);
+			turn(50, sensor_data);
 		}
 		
 		return 1;
@@ -160,22 +147,12 @@ int detectCrater(oi_t * sensor_data){
 	return 0;
 }
 
-void moveCautiously(int cm, oi_t * sensorData){
+int moveCautiously(int cm, oi_t * sensorData){
 	int currentDistanceTravelled = 0;
 	int detectedAngle = 0;
-	int slowScanSprint = -1, fastScanSprint = -1, boundrySprint = -1, craterSprint = -1;
+	int fastScanSprint = -1, boundrySprint = -1, craterSprint = -1;
 	
 	while ( currentDistanceTravelled < cm) {
-		
-		//Full scan every 30CM (one square)
-		/*if( slowScanSprint > 300 ){
-			detectedAngle = slowFullScan();
-			if(detectedAngle){
-				//turn(detectedAngle, sensorData);
-				detectedAngle =0;
-			}
-		} */
-		
 		// Scan every 10CM, prevent collisions
 		if ( fastScanSprint > 100 || fastScanSprint == -1) {
 			fastScanSprint = 0;
@@ -189,17 +166,23 @@ void moveCautiously(int cm, oi_t * sensorData){
 			}
 		}
 		
-		// Scan every 1CM, prevent driving over boundaries
+		// Scan every 2CM, prevent driving over boundaries
 		if ( boundrySprint > 10 || boundrySprint == -1) {
 			boundrySprint = 0;
 			
-			if ( detectColoredBoundry(sensorData) ) {
-				break;
+			
+			int boundaryType = detectColoredBoundry(sensorData);
+			
+			switch (boundaryType ) {
+				case WHITE_BOUNDRY:
+					break;
+				case FINISH_BOUNDRY:
+					return FINISH_BOUNDRY;
 			}
 		}
 		
-		// Scan ever 2CM, prevent falling in craters
-		if ( craterSprint > 20 || craterSprint == -1) {
+		// Scan ever 0.5CM, prevent falling in craters
+		if ( craterSprint > 5 || craterSprint == -1) {
 			craterSprint = 0;
 			
 			if ( detectCrater(sensorData) ) {
@@ -207,25 +190,34 @@ void moveCautiously(int cm, oi_t * sensorData){
 			}
 		}
 		
-		//Move 1CM
-		if ( move(120,120,10,sensorData) ) {
+		//Move 0.5CM
+		if ( move(125,125,5,sensorData) ) {
 			break;
 		}
 		
 		//Update scan sprint distances
-		currentDistanceTravelled+=10;
-		fastScanSprint+=10;
-		boundrySprint+=10;
-		craterSprint+=10;
+		currentDistanceTravelled+=5;
+		fastScanSprint+=5;
+		boundrySprint+=5;
+		craterSprint+=5;
 	}
+	
+	return 0;
 }
 
 void winProcedure(oi_t * sensorData){
-	unsigned char mario1NumNotes = 49;
-	unsigned char mario1Notes[49]    = {48, 60, 45, 57, 46, 58,  0, 48, 60, 45, 57, 46, 58,  0, 41, 53, 38, 50, 39, 51,  0, 41, 53, 38, 50, 39, 51,  0, 51, 50, 49, 48, 51, 50, 44, 43, 49, 48, 54, 53, 52, 58, 57, 56, 51, 47, 46, 45, 44 };
-	unsigned char mario1Duration[49] = {12, 12, 12, 12, 12, 12, 62, 12, 12, 12, 12, 12, 12, 62, 12, 12, 12, 12, 12, 12, 62, 12, 12, 12, 12, 12, 12, 48,  8,  8,  8, 24, 24, 24, 24, 24, 24,  8,  8,  8,  8,  8,  8, 16, 16, 16, 16, 16, 16 };
-	oi_load_song(MARIO_UNDERWORLD, mario1NumNotes, mario1Notes, mario1Duration);
-	oi_play_song(MARIO_UNDERWORLD);
+	
+	int i = 0;
+	for ( ; i < 8; i++ ) {
+		move(500, 500, 50, sensorData);
+		move(-500,-500, 50, sensorData);
+	}
+			
+	unsigned char ImperialMarchNumNotes = 19;
+	unsigned char ImperialMarchNotes[19]     = {55, 55, 55, 51, 58, 55, 51, 58, 55, 0,  62, 62, 62, 63, 58, 54, 51, 58, 55};
+	unsigned char ImperialMarchDurations[19] = {32, 32, 32, 20, 12, 32, 20, 12, 32, 32, 32, 32, 32, 20, 12, 32, 20, 12, 32};
+	oi_load_song(IMERPIAL_MARCH, ImperialMarchNumNotes, ImperialMarchNotes, ImperialMarchDurations);
+	oi_play_song(IMERPIAL_MARCH);
 	
 	turn(1000, sensorData);
 }
@@ -243,70 +235,10 @@ void setBaseLightSensors(oi_t * sensor_data){
 		front_left_base = sensor_data->cliff_frontleft_signal;
 		front_right_base = sensor_data->cliff_frontright_signal;
 		right_base = sensor_data->cliff_right_signal;
+		
+		lprintf("%d %d %d %d", left_base, front_left_base, front_right_base, right_base);
 	}
-}
 
-int receiveCommand(){
-	// Ignore garbage before command
-	while ( (serial_getc() != '!') ) {}
-	
-	char command[10] = "\0\0\0\0\0\0\0\0\0\0";
-	int commandCharIndex = 0;
-	char currentChar;
-	
-	// Read command
-	while ( (currentChar = serial_getc()) != ' ') {
-		command[commandCharIndex] = currentChar;
-		commandCharIndex++;
-	}
-	
-	if ( !strcmp(command, "TURN") || !strcmp(command, "turn") ) {
-		return TURN;
-	}
-	
-	if ( !strcmp(command, "MOVE") || !strcmp(command, "move") ) {
-		return MOVE;
-	}
-	
-	if ( !strcmp(command, "WIN") || !strcmp(command, "win") ) {
-		return WIN;
-	}
-	
-	return NONE;
-}
-
-int receiveQuantity(){
-	char quantity[10];
-	int quantityCharIndex = 0;
-	char currentChar;
-	
-	// Read quantity
-	while ( (currentChar = serial_getc()) != '!') {
-		quantity[quantityCharIndex] = currentChar;
-		quantityCharIndex++;
-	}
-	
-	if ( quantityCharIndex == 0 ) {
-		return 0;
-	}
-	
-	return atoi(quantity);
-}
-
-void executeCommand(int command, int quantity, oi_t * sensor_data){
-	switch(command) {
-		case MOVE:
-			moveCautiously(quantity * 10, sensor_data);
-			break;
-		case TURN:
-			turn(quantity, sensor_data);
-			break;
-		case WIN:
-			winProcedure(sensor_data);
-			break;
-		default:
-			break;
-	}
 }
 
 void print(char* s){
@@ -314,55 +246,35 @@ void print(char* s){
 	serial_puts(s);
 }
 
-// AUTONOMY TODOS
-// React to collisions:
-// - Hit a boundary? Turn 90 degrees away from it
-// - Hit a crater? Determine where it's at, back up and decided to bypass it left / right
-// - Detect object collision? Adjust trajectory to move between objects or go elsewhere
-// Finding the end:
-// - Search for the smallest posts
-// - Move to posts
-// -- What if we hit the crater? (I've seen it setup so they often try and trick you to hit the craters)
-// -- Position ourselves to move in the exact center of two posts
-// -- Move straight through them. Detection does the rest
+//Use to confirm servo calibration
+void calibrateServo(){
+	move_servo(0);
+	wait_ms(750);
+	move_servo(90);
+	wait_ms(750);
+	move_servo(180);
+}
 
 int main(void)
 {
 	oi_t * sensor_data = init();
 	
 	setBaseLightSensors(sensor_data);
-
-	/*
-	map_t map;
-	init_map(&map);
 	
-	int command = -1, quantity = -1;
-	*/
+	//calibrateServo();
 	
 	while (1) {
-		/*
-		print("Scanning...");
-		slowFullScan(&map);
+		if ( moveCautiously(400, sensor_data) ) {
+			break;
+		}
 		
-		print("Receiving Command...");
-		command = receiveCommand();
-		
-		print("Receiving Magnitude...");
-		quantity = receiveQuantity();
-		
-		print("Executing Command...");
-		executeCommand(command, quantity, sensor_data);
-		*/
-		
+		//Color sensor calibration
 		//detectColoredBoundry(sensor_data);
 		
-		moveCautiously(450, sensor_data);
-		
 		oi_update(sensor_data);
-	}
+	} 
 	
 	oi_free(sensor_data);
-	//free(&map);
-	
+
 	return 0;
 }

@@ -42,16 +42,11 @@
 #define WHITE_BOUNDARY_UPPER 950
 
 oi_t * init();
-//void slowFullScan(map_t *m);
-int slowFullScan();
 int rapidForwardScan();
 int detectColoredBoundry(oi_t * sensor_data);
 int determineBoundryType(int reading, int base);
-void moveCautiously(int cm, oi_t * sensorData);
-int receiveCommand();
-int receiveQuantity();
+int moveCautiously(int cm, oi_t * sensorData);
 void print(char* s);
-void executeCommand(int command, int quantity, oi_t * sensor_data);
 void winProcedure(oi_t * sensorData);
 int main(void);
 

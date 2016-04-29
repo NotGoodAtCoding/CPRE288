@@ -43,8 +43,8 @@
 #define TOP 43000
 unsigned pulse_width = 800;
 
-#define DEGREE_MULTIPLIER 20.5
-#define DEGREE_OFFSET 700
+#define DEGREE_MULTIPLIER 19.2
+#define DEGREE_OFFSET 800
 
 // Initialize timer for Serve sensor
 void timer3_init() {
