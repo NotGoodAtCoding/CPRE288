@@ -31,6 +31,10 @@ int rapidForwardScan(){
 		float pingAvg = 100;
 		float irAvg = 100;
 		
+		move_servo(angle);
+		
+		wait_ms(250);
+		
 		//Do a 180 degree sweep
 		while(angle <= 140)
 		{
