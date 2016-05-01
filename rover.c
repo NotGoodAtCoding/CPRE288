@@ -9,7 +9,11 @@
 #include "rover.h"
 #include "map.h"
 
-// Initialize all necessary components
+/// Initialize all necessary components in the oi_t struct
+/**
+ * Aggregation of calls for initializers of sensors used by the program
+ * @return the fully initialized oi_t struct
+ */ 
 oi_t * init(){
 	lcd_init();
 	serial_init();
@@ -24,8 +28,12 @@ oi_t * init(){
 	return sensor_data;	
 }
 
-// Do a short / RAPID forward scan from approx 45 - 135 to prevent collisions
-//CHANGED: Lessened sweep angle, lessened detect distance to 15 cm
+/// Do a rapid forward scan from approx 40 - 140 to prevent collisions
+/**
+ * Performs a scan of the immediate area in front of the iRobot and
+ * returns the angle of incidence of any object detected.
+ * @return the angle of detection of any objects, 0 otherwise
+ */ 
 int rapidForwardScan(){
 		float angle = 40;
 		float pingAvg = 100;
@@ -60,7 +68,14 @@ int rapidForwardScan(){
 
 int left_base = 0, front_left_base = 0, front_right_base = 0, right_base = 0;
 
-// Detect tape boundary with light sensor
+/// Detect tape boundary with light sensor
+/**
+ * Uses the passed in sensor data to detect if a boundary has been reached.
+ * If a white tape boundary is detected, reacts accordingly by turning left or right to 
+ * avoid the boundary. If the finish color is detected, the win procedure is started.
+ * @param sensor_data the oi_t struct representing the sensor data of the robot
+ * @return 1 if boundary detected, 2 if finish detected, 0 otherwise
+ */
 int detectColoredBoundry(oi_t * sensor_data){
 	int left_sensor = sensor_data->cliff_left_signal;
 	int front_left_sensor = sensor_data->cliff_frontleft_signal;
@@ -100,19 +115,14 @@ int detectColoredBoundry(oi_t * sensor_data){
 	return NO_BOUNDRY;
 }
 
-//Sketchy red/yellow
-/*
-int determineBoundryType(int reading, int base){
-	if ( reading < base * 2 ) {
-		return NO_BOUNDRY;
-	} else if ( reading >= base * 2 && reading <  (base * 3) + (base / 2) ) {
-		return WHITE_BOUNDRY;
-	} else {
-		return FINISH_BOUNDRY;
-	}
-} */
 
-// For black circles
+/// Detects a BLACK finish color, WHITE boundary color, and grey passable floor color
+/**
+ * Custom detection method to account for black finish
+ * @param reading an int representing the light sensor reading
+ * @param base the base reading of the light sensors detecting normal floor tiles
+ * @return 1 if boundary detected, 2 if finish detected, 0 otherwise
+ */
 int determineBoundryType(int reading, int base){
 	if ( reading < 100 && reading > 0 ) {
 		return FINISH_BOUNDRY;
@@ -123,7 +133,12 @@ int determineBoundryType(int reading, int base){
 	}
 }
 
-// Crater detection
+/// Crater detection
+/**
+ * Uses the light sensors to detect cliffs
+ * @param sensor_data, a pointer to the sensor data struct
+ * @return 1 if cliff detected, 0 otherwise
+ */
 int detectCrater(oi_t * sensor_data){
 	int left_cliff = sensor_data->cliff_left_signal;
 	int front_left_cliff = sensor_data->cliff_frontleft_signal;
@@ -151,6 +166,14 @@ int detectCrater(oi_t * sensor_data){
 	return 0;
 }
 
+/// Move forward at a speed allwong for object and cliff detection
+/**
+ * Moves forward and performs periodic checks for Objects, Boundaries, and Crater
+ * course features.
+ * @param cm centimeters to move forward at a reasonable pace
+ * @param sensorData a pointer to the sensor data struct
+ * @return FINISH_BOUNDRY if finish found, 0 otherwise
+ */
 int moveCautiously(int cm, oi_t * sensorData){
 	int currentDistanceTravelled = 0;
 	int detectedAngle = 0;
@@ -170,7 +193,7 @@ int moveCautiously(int cm, oi_t * sensorData){
 			}
 		}
 		
-		// Scan every 2CM, prevent driving over boundaries
+		// Scan every 1CM, prevent driving over boundaries
 		if ( boundrySprint > 10 || boundrySprint == -1) {
 			boundrySprint = 0;
 			
@@ -209,6 +232,11 @@ int moveCautiously(int cm, oi_t * sensorData){
 	return 0;
 }
 
+/// Procedure for finding the finish
+/**
+ * On finding the finish, 'pop a sick wheelie, pop in the sick beats, then donuts for days'
+ * @param sensorData a pointer to the oi_t struct
+ */
 void winProcedure(oi_t * sensorData){
 	
 	int i = 0;
@@ -226,6 +254,11 @@ void winProcedure(oi_t * sensorData){
 	turn(1000, sensorData);
 }
 
+/// Calibrate the light sensors for normal floor
+/**
+ * Sets the base reading for each light sensor.
+ * @param sensor_data a pointer to the oi_t struct
+ */
 void setBaseLightSensors(oi_t * sensor_data){
 	left_base = sensor_data->cliff_left_signal;
 	front_left_base = sensor_data->cliff_frontleft_signal;
@@ -245,12 +278,18 @@ void setBaseLightSensors(oi_t * sensor_data){
 
 }
 
+/// Prints string to LCD Display and Serial connection
+/**
+ * Makes subsequent calls to the string printing methods associated
+ * with the LCD Display and the Serial Connection
+ * @param *s char pointer to the string to be printed, must be no longer than 80 chars
+ */
 void print(char* s){
 	lprintf(s);
 	serial_puts(s);
 }
 
-//Use to confirm servo calibration
+/// Use to confirm servo calibration
 void calibrateServo(){
 	move_servo(0);
 	wait_ms(750);
@@ -259,6 +298,11 @@ void calibrateServo(){
 	move_servo(180);
 }
 
+/// Main method to run the automation loop 
+/**
+ * Moves cautiously, avoiding obstacles until the finish is reached, then performs the 
+ * win procedure.
+ */
 int main(void)
 {
 	oi_t * sensor_data = init();

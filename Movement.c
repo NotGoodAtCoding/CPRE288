@@ -6,7 +6,6 @@
  *  Author: sakraus
  */ 
 
-//TODO: Include guards
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -17,7 +16,14 @@
 #include "util.h"
 #include <avr/io.h>
 
-// Move with right, left wheel speed for distance - TODO: Distance is in CM?
+/// Move with right, left wheel speed for distance 
+/**
+ * Energizes the wheels of the iRobot for some distance, then stops the wheels.
+ * @param right the speed of the right wheel
+ * @param left the speed of the left wheel
+ * @param distance the distance in mm to travel
+ * @param *sensor_data a pointer to the sensor data struct
+ */
 int move(int right, int left, int distance, oi_t *sensor_data){
 	int sum = 0;
 	oi_set_wheels(right - 8, left); // move forward; full speed
@@ -42,7 +48,13 @@ int move(int right, int left, int distance, oi_t *sensor_data){
 	return 0;
 }
 
-// Turn turnDegree
+/// Turn the robot a number of degrees
+/**
+ * Calls the set_wheels function to turn the iRobot. turnDegrees should be 
+ * negative for a clockwise rotation, positive for a CCW rotation.
+ * @param turnDegrees the number or degrees to turn.
+ * @param *sensor_data a pointer to the sensor data struct
+ */
 void turn(int turnDegrees, oi_t * sensor_data){
 	int currentDegrees = 0;
 	int magnitude = turnDegrees > 0 ? 1 : -1;
@@ -60,7 +72,11 @@ void turn(int turnDegrees, oi_t * sensor_data){
 	oi_set_wheels(0,0); //Stop
 }
 
-// Detect and react to collision - TODO: Different collision detection subroutine?
+/// Detect and react to collision
+/**
+ * Default behavior for object detection. 
+ * @param *sensor_data a pointer to the sensor data struct
+ */
 int detectCollision(oi_t * sensor_data){
 	int left_hit = sensor_data->bumper_left;
 	int right_hit = sensor_data->bumper_right;

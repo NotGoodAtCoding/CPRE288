@@ -27,7 +27,13 @@
 #define BAUD 34
 #define MYUBRR FOSC/16/BAUD-1
 
-// Initialize serial communication over bluetooth
+/// Initialize serial communication over bluetooth
+/**
+ * Set the UBBR0H and UBRR0L registers to the BAUD rate 34. 
+ * Set the UCSR0A register to enable double speed mode.
+ * Set the UCSR0C register to set the frame format: 8 data bits, 2 stop bits
+ * Set the UCSR0B register to enable receiver and transmitter.
+ */
 void serial_init(void) {
 	/* Set baud rate */
 	UBRR0H = (unsigned char) (BAUD >> 8);
@@ -41,21 +47,27 @@ void serial_init(void) {
 	
 	/* Enable receiver and transmitter */
 	UCSR0B = 0b00011000;
-	
-	// UCSR0B |= 0b10000000; // optional: receive interrupt enable bit
 }
-//Receive data from the serial connection
+/// Receive data from the serial connection
+/**
+ * Waits for a recieve complete flag in the UCSR0A register, then
+ * returns the data in the UDR0 register and clears it.
+ * @return the char representation of the data in the UDR0 register
+ */
 unsigned char serial_getc() {
 	/* Wait for the receive complete flag (RXC) */
-	//while ((UCSR0A & 0b10000000) == 0);
-	
 	while ( !(UCSR0A & 0b10000000) ) {}
 	
 	/* Reads data from the receive buffer; clears the receive buffer */
 	return UDR0;
 }
 
-//Transmit Data over the Serial connection
+/// Transmit Data over the Serial connection
+/**
+ * Wait for empty transmit buffer by checking the UDRE bit 
+ * puts the data in the UDR0 register.
+ * @param data the char representation of the data to be put in the UDR0 register
+ */
 void serial_putc(char data) {
 
 	/* Wait for empty transmit buffer by checking the UDRE bit */
@@ -65,7 +77,13 @@ void serial_putc(char data) {
 	UDR0 = data;
 }
 
-// Transmit a string of characters over the serial connection
+/// Transmit a string of characters over the serial connection
+/**
+ * Transmits a char* up to length 80 over the serial connection. 
+ * The data is padded to be 80 chars long in order to preserve the frame of the
+ * receiving terminal, assuming it is 80 characters wide.
+ * @param data the char* to be transmitted
+ */
 void serial_puts(char* data){
 	int i = 0;
 	char buf[81];

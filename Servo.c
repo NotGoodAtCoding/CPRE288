@@ -46,7 +46,14 @@ unsigned pulse_width = 800;
 #define DEGREE_MULTIPLIER 19.2
 #define DEGREE_OFFSET 800
 
-// Initialize timer for Serve sensor
+/// Initialize timer for Servo sensor
+/**
+ * Sets the TCCR3A register to OCRA for top and compare on B
+ * Sets the TCCR3B register to OCRA for top and prescalar 8
+ * Sets the OCR3A register to TOP 
+ * Sets the OCR3B register to the pulse_width
+ * Initializes the DDRE port for servo function
+ */
 void timer3_init() {
 	TCCR3A = 0b00100011; //OCRA for top, compare on B
 	TCCR3B = 0b00011010; //ocra for top, 8 prescalar
@@ -55,17 +62,24 @@ void timer3_init() {
 	DDRE |= _BV(4);
 }
 
-// Move servo to angle degree
+/// Move servo to angle degree
+/**
+ * Sets the pulse_width and assigns it to the OCR3B register
+ * @param degree an unsigned int between 0 and 180 to set the servo to
+ */
 void move_servo(unsigned degree) {
 	pulse_width = DEGREE_MULTIPLIER * degree + DEGREE_OFFSET; // calculate pulse width in cycles
 	OCR3B = pulse_width; // set pulse width
 	wait_ms(30);
 }
 
-//Calculate arc distance given degree difference and distance
+/// Calculate arc distance given degree difference and distance
+/**
+ * Given a degree span and an instance distance, calculates the arc length
+ * @param degrees the degree span
+ * @param dist the distance to the artifact
+ * @return the arc length of the area covered by the given parameters
+ */
 float arc_distance(float degrees, float dist){
 	return dist*(sqrt(2-2*cos(degrees)));
 }
-
-
-

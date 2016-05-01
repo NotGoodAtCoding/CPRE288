@@ -4,18 +4,29 @@
 
 #include <stdio.h>
 
+/// Initialize the oi_t sensor for music
+/** 
+ * Allocates memory and initializes the sensor in preparation to play music.
+ */
 void init_music(){	
  oi_t* sensor = oi_alloc();
  oi_init(sensor);
 }
 
+/// Loads and plays the Imperial March theme into the music sensor
+/**
+ * The song is loaded as two unsigned char arrays representing the notes and durations
+ * The song is then immediately played.
+ */
 void load_songs( ) {
 	
-	// Notes: oi_load_song takes four arguments
-	// arg1 - an integer from 0 to 16 identifying this song
-	// arg2 - an integer that indicates the number of notes in the song (if greater than 16, it will consume the next song index's storage space)
-	// arg3 - an array of integers representing the midi note values (example: 60 = C, 61 = C sharp)
-	// arg4 - an array of integers representing the duration of each note (in 1/64ths of a second)
+	/** Notes: oi_load_song takes four arguments
+	 * arg1 - an integer from 0 to 16 identifying this song
+	 * arg2 - an integer that indicates the number of notes in the song (if greater than 16, it will
+	 * consume the next song index's storage space)
+	 * arg3 - an array of integers representing the midi note values (example: 60 = C, 61 = C sharp)
+	 * arg4 - an array of integers representing the duration of each note (in 1/64ths of a second)
+	*/
 	
 	unsigned char ImperialMarchNumNotes = 19;
 	unsigned char ImperialMarchNotes[19]     = {55, 55, 55, 51, 58, 55, 51, 58, 55, 0,  62, 62, 62, 63, 58, 54, 51, 58, 55};

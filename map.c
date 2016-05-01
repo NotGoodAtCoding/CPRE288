@@ -5,12 +5,22 @@
 
 #include "map.h"
 
-//utility deg to rad
+///Converts degrees to radians
+/**
+ * Utility funciton to convert degrees to radians.
+ * @param degrees an int representing the degrees to be converted.
+ * @retrun radian representation of the degree measurement.
+ */
   double deg_to_rad(int degrees){
   	return (((double) degrees) * PI) / 180;
   }
 
-//set all spaces to clear
+///Initializes the cartesian map
+/**
+ * Map initializer. The map is filled with whitespace chars ' ' as well as
+ * forward distance markers and an -X- sprite representing the Rover and its width.
+ * @param *m a pointer to the map to initialize
+ */
   void init_map(map_t *m){
 	  int i, j;
 	  for(i=0; i<MAP_Y; i++){
@@ -28,7 +38,16 @@
 	  m->map[0][CENTER_X]          = '8';
   }
 
-//populate the cartesian map. Fills from contact to edge of map
+///Places a single point on the map
+/** 
+ * Calculates the [x, y] (cartesian) coordinates of the radial coordinates
+ * given by the distance and angle parameters, then uses the terrain type to 
+ * place a point on the map of the given map struct.
+ * @param *m a pointer to the map struct on which the point is to be placed
+ * @param t the terrain type of the point to be placed
+ * @param distance the distance measurement to the point 
+ * @param angle the angle from 0 of the point 
+ */
   void place_point(map_t *m, terrain t, float distance, int angle){
   	int x, y;
 	
@@ -40,7 +59,5 @@
 		(m->map[y][x] != ' ') ? (m->map[y][x] = 'X') :
 		//IR denoted '#' , PING denoted '*'
 		(t == IR) ? (m->map[y][x] = '#') : (m->map[y][x] = '*') ;
-		
 	}
-  
   }
